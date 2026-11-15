@@ -1,0 +1,66 @@
+# Python
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+.mypy_cache/
+.ruff_cache/
+.pytest_cache/
+.coverage
+htmlcov/
+dist/
+build/
+
+# Node
+node_modules/
+apps/admin/dist/
+*.tsbuildinfo
+
+# Flutter / Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+**/build/
+**/ios/Pods/
+**/android/.gradle/
+**/android/local.properties
+**/android/key.properties
+**/android/app/upload-keystore.jks
+**/windows/flutter/ephemeral/
+**/linux/flutter/ephemeral/
+**/macos/Flutter/ephemeral/
+*.iml
+.idea/
+
+# Секреты и локальные данные
+.env
+.env.*
+!.env.example
+*.pem
+*.key
+!infra/**/*.example.key
+secrets/
+!infra/compose/secrets/README.md
+data/
+var/
+*.sqlite
+*.db
+
+# ML: веса и датасеты не храним в git
+ml/artifacts/
+ml/datasets/*/raw/
+ml/runs/
+*.safetensors
+*.onnx
+!apps/**/assets/models/README.md
+*.pt
+*.ckpt
+
+# ОС и редакторы
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
