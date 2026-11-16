@@ -6294,6 +6294,10 @@
             "type": "string",
             "format": "date-time",
             "title": "Generated At"
+          },
+          "utc_offset_minutes": {
+            "type": "integer",
+            "title": "Utc Offset Minutes"
           }
         },
         "type": "object",
@@ -6303,7 +6307,8 @@
           "date_to",
           "lessons",
           "version",
-          "generated_at"
+          "generated_at",
+          "utc_offset_minutes"
         ],
         "title": "ScheduleOut"
       },
@@ -6637,6 +6642,11 @@
               }
             ],
             "title": "Support Contact"
+          },
+          "utc_offset_minutes": {
+            "type": "integer",
+            "title": "Utc Offset Minutes",
+            "default": 180
           }
         },
         "type": "object",

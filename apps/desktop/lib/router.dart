@@ -199,7 +199,7 @@ class ChatsPane extends ConsumerWidget {
       Expanded(
         child: chatId == null
             ? EmptyState(text: s.chatEmpty, mood: MascotMood.happy)
-            : ChatView(key: ValueKey(chatId), chatId: chatId!),
+            : ChatView(key: ValueKey(chatId), chatId: chatId!, embedded: true),
       ),
     ]);
   }

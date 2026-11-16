@@ -687,5 +687,5 @@ class SEn extends S {
 
   @override
   String get hotkeyHint =>
-      'Ctrl+Space: voice input, Ctrl+N: new chat, Ctrl+K: search';
+      'Hold Ctrl+Space to talk. Ctrl+M: microphone, Ctrl+N: new chat';
 }

@@ -67,7 +67,8 @@ String toolText(S s, String tool) => switch (tool) {
       _ => s.toolGeneric,
     };
 
-String hhmm(DateTime t) {
-  final l = t.toLocal();
+/// Часы и минуты. С [offsetMinutes] время показывается по часам вуза, без него по часам устройства.
+String hhmm(DateTime t, [int? offsetMinutes]) {
+  final l = offsetMinutes == null ? t.toLocal() : t.toUtc().add(Duration(minutes: offsetMinutes));
   return '${l.hour.toString().padLeft(2, '0')}:${l.minute.toString().padLeft(2, '0')}';
 }

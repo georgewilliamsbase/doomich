@@ -276,5 +276,5 @@
   "docFailed_too_many_pages": "Больше 300 страниц",
   "docFailed_empty_document": "В документе нет текста",
   "docFailed_pdf_encrypted": "PDF защищён паролем",
-  "hotkeyHint": "Ctrl+Пробел: голосовой ввод, Ctrl+N: новый чат, Ctrl+K: поиск"
+  "hotkeyHint": "Удерживайте Ctrl+Пробел, чтобы говорить. Ctrl+M: микрофон, Ctrl+N: новый чат"
 }

@@ -1378,7 +1378,7 @@ abstract class S {
   /// No description provided for @hotkeyHint.
   ///
   /// In ru, this message translates to:
-  /// **'Ctrl+Пробел: голосовой ввод, Ctrl+N: новый чат, Ctrl+K: поиск'**
+  /// **'Удерживайте Ctrl+Пробел, чтобы говорить. Ctrl+M: микрофон, Ctrl+N: новый чат'**
   String get hotkeyHint;
 }
 

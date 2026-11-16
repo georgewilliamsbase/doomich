@@ -133,6 +133,7 @@ async def test_schedule_api(client, env):
     assert body["group"]["code"] == "ИВТ-21" and len(body["lessons"]) == 2
     assert body["lessons"][0]["teacher"] == "Иванова Мария Петровна"
     assert r.headers["etag"].strip('"') == body["version"]
+    assert body["utc_offset_minutes"] == 180
     nn = (await client.get("/v1/schedule/now", headers=h)).json()
     assert nn["next"]["subject"] == "Алгебра"
     teachers = (await client.get("/v1/teachers", params={"q": "иванов"}, headers=h)).json()

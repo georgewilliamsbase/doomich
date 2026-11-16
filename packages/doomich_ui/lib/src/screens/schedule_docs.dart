@@ -118,7 +118,7 @@ class _ScheduleViewState extends ConsumerState<ScheduleView> {
         for (final l in lessons)
           Padding(
             padding: const EdgeInsets.only(bottom: Gaps.s),
-            child: LessonTile(lesson: l,
+            child: LessonTile(lesson: l, offsetMinutes: week.offsetMinutes,
                 highlight: !l.startsAt.toLocal().isAfter(now) && l.endsAt.toLocal().isAfter(now)),
           ),
     ];
@@ -135,19 +135,21 @@ class _NowNext extends StatelessWidget {
     final s = context.s;
     final (cur, next) = week.nowNext(DateTime.now());
     if (cur == null && next == null) return const SizedBox.shrink();
+    final off = week.offsetMinutes;
     return Card(
       child: Padding(
         padding: const EdgeInsets.all(Gaps.m),
         child: Column(crossAxisAlignment: CrossAxisAlignment.start, children: [
           if (cur != null) ...[
             Text(s.nowLesson, style: Theme.of(context).textTheme.labelLarge),
-            Text('${cur.subject} · ${hhmm(cur.startsAt)}-${hhmm(cur.endsAt)}${cur.room == null ? '' : ' · ${s.room(cur.room!)}'}'),
+            Text('${cur.subject} · ${hhmm(cur.startsAt, off)}-${hhmm(cur.endsAt, off)}'
+                '${cur.room == null ? '' : ' · ${s.room(cur.room!)}'}'),
             const SizedBox(height: Gaps.s),
           ],
           if (next != null) ...[
             Text(s.nextLesson, style: Theme.of(context).textTheme.labelLarge),
-            Text('${next.subject} · ${DateFormat.E(Localizations.localeOf(context).languageCode).format(next.startsAt.toLocal())} '
-                '${hhmm(next.startsAt)}${next.room == null ? '' : ' · ${s.room(next.room!)}'}'),
+            Text('${next.subject} · ${DateFormat.E(Localizations.localeOf(context).languageCode).format(week.campus(next.startsAt))} '
+                '${hhmm(next.startsAt, off)}${next.room == null ? '' : ' · ${s.room(next.room!)}'}'),
           ],
         ]),
       ),

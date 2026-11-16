@@ -213,5 +213,5 @@
   "docFailed_too_many_pages": "More than 300 pages",
   "docFailed_empty_document": "The document has no text",
   "docFailed_pdf_encrypted": "The PDF is password-protected",
-  "hotkeyHint": "Ctrl+Space: voice input, Ctrl+N: new chat, Ctrl+K: search"
+  "hotkeyHint": "Hold Ctrl+Space to talk. Ctrl+M: microphone, Ctrl+N: new chat"
 }

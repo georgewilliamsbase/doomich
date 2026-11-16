@@ -43,3 +43,8 @@ def month_key(dt: datetime | None = None) -> str:
 def combine_local(day: date, hhmm: str, tz_name: str) -> datetime:
     hours, minutes = hhmm.split(":")
     return datetime(day.year, day.month, day.day, int(hours), int(minutes), tzinfo=tz(tz_name))
+
+
+def utc_offset_minutes(tz_name: str) -> int:
+    offset = local_now(tz_name).utcoffset()
+    return int(offset.total_seconds() // 60) if offset else 0

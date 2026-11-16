@@ -309,7 +309,7 @@ class $CachedLessonsTable extends CachedLessons
 class CachedLesson extends DataClass implements Insertable<CachedLesson> {
   final String id;
 
-  /// Ключ выборки: "g:<id группы>:<подгруппа>" или "t:<ключ преподавателя>"
+  /// Ключ выборки: `g:<id группы>:<подгруппа>` или `t:<ключ преподавателя>`
   final String scope;
   final DateTime startsAt;
   final DateTime endsAt;
@@ -771,6 +771,18 @@ class $ScheduleMetaTable extends ScheduleMeta
     type: DriftSqlType.string,
     requiredDuringInsert: false,
   );
+  static const VerificationMeta _utcOffsetMeta = const VerificationMeta(
+    'utcOffset',
+  );
+  @override
+  late final GeneratedColumn<int> utcOffset = GeneratedColumn<int>(
+    'utc_offset',
+    aliasedName,
+    false,
+    type: DriftSqlType.int,
+    requiredDuringInsert: false,
+    defaultValue: const Constant(180),
+  );
   @override
   List<GeneratedColumn> get $columns => [
     scope,
@@ -779,6 +791,7 @@ class $ScheduleMetaTable extends ScheduleMeta
     dateTo,
     version,
     groupCode,
+    utcOffset,
   ];
   @override
   String get aliasedName => _alias ?? actualTableName;
@@ -838,6 +851,12 @@ class $ScheduleMetaTable extends ScheduleMeta
         groupCode.isAcceptableOrUnknown(data['group_code']!, _groupCodeMeta),
       );
     }
+    if (data.containsKey('utc_offset')) {
+      context.handle(
+        _utcOffsetMeta,
+        utcOffset.isAcceptableOrUnknown(data['utc_offset']!, _utcOffsetMeta),
+      );
+    }
     return context;
   }
 
@@ -871,6 +890,10 @@ class $ScheduleMetaTable extends ScheduleMeta
         DriftSqlType.string,
         data['${effectivePrefix}group_code'],
       ),
+      utcOffset: attachedDatabase.typeMapping.read(
+        DriftSqlType.int,
+        data['${effectivePrefix}utc_offset'],
+      )!,
     );
   }
 
@@ -888,6 +911,9 @@ class ScheduleMetaData extends DataClass
   final DateTime dateTo;
   final String version;
   final String? groupCode;
+
+  /// Смещение часового пояса вуза в минутах: расписание показывается по времени вуза
+  final int utcOffset;
   const ScheduleMetaData({
     required this.scope,
     required this.fetchedAt,
@@ -895,6 +921,7 @@ class ScheduleMetaData extends DataClass
     required this.dateTo,
     required this.version,
     this.groupCode,
+    required this.utcOffset,
   });
   @override
   Map<String, Expression> toColumns(bool nullToAbsent) {
@@ -907,6 +934,7 @@ class ScheduleMetaData extends DataClass
     if (!nullToAbsent || groupCode != null) {
       map['group_code'] = Variable<String>(groupCode);
     }
+    map['utc_offset'] = Variable<int>(utcOffset);
     return map;
   }
 
@@ -920,6 +948,7 @@ class ScheduleMetaData extends DataClass
       groupCode: groupCode == null && nullToAbsent
           ? const Value.absent()
           : Value(groupCode),
+      utcOffset: Value(utcOffset),
     );
   }
 
@@ -935,6 +964,7 @@ class ScheduleMetaData extends DataClass
       dateTo: serializer.fromJson<DateTime>(json['dateTo']),
       version: serializer.fromJson<String>(json['version']),
       groupCode: serializer.fromJson<String?>(json['groupCode']),
+      utcOffset: serializer.fromJson<int>(json['utcOffset']),
     );
   }
   @override
@@ -947,6 +977,7 @@ class ScheduleMetaData extends DataClass
       'dateTo': serializer.toJson<DateTime>(dateTo),
       'version': serializer.toJson<String>(version),
       'groupCode': serializer.toJson<String?>(groupCode),
+      'utcOffset': serializer.toJson<int>(utcOffset),
     };
   }
 
@@ -957,6 +988,7 @@ class ScheduleMetaData extends DataClass
     DateTime? dateTo,
     String? version,
     Value<String?> groupCode = const Value.absent(),
+    int? utcOffset,
   }) => ScheduleMetaData(
     scope: scope ?? this.scope,
     fetchedAt: fetchedAt ?? this.fetchedAt,
@@ -964,6 +996,7 @@ class ScheduleMetaData extends DataClass
     dateTo: dateTo ?? this.dateTo,
     version: version ?? this.version,
     groupCode: groupCode.present ? groupCode.value : this.groupCode,
+    utcOffset: utcOffset ?? this.utcOffset,
   );
   ScheduleMetaData copyWithCompanion(ScheduleMetaCompanion data) {
     return ScheduleMetaData(
@@ -973,6 +1006,7 @@ class ScheduleMetaData extends DataClass
       dateTo: data.dateTo.present ? data.dateTo.value : this.dateTo,
       version: data.version.present ? data.version.value : this.version,
       groupCode: data.groupCode.present ? data.groupCode.value : this.groupCode,
+      utcOffset: data.utcOffset.present ? data.utcOffset.value : this.utcOffset,
     );
   }
 
@@ -984,14 +1018,22 @@ class ScheduleMetaData extends DataClass
           ..write('dateFrom: $dateFrom, ')
           ..write('dateTo: $dateTo, ')
           ..write('version: $version, ')
-          ..write('groupCode: $groupCode')
+          ..write('groupCode: $groupCode, ')
+          ..write('utcOffset: $utcOffset')
           ..write(')'))
         .toString();
   }
 
   @override
-  int get hashCode =>
-      Object.hash(scope, fetchedAt, dateFrom, dateTo, version, groupCode);
+  int get hashCode => Object.hash(
+    scope,
+    fetchedAt,
+    dateFrom,
+    dateTo,
+    version,
+    groupCode,
+    utcOffset,
+  );
   @override
   bool operator ==(Object other) =>
       identical(this, other) ||
@@ -1001,7 +1043,8 @@ class ScheduleMetaData extends DataClass
           other.dateFrom == this.dateFrom &&
           other.dateTo == this.dateTo &&
           other.version == this.version &&
-          other.groupCode == this.groupCode);
+          other.groupCode == this.groupCode &&
+          other.utcOffset == this.utcOffset);
 }
 
 class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
@@ -1011,6 +1054,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
   final Value<DateTime> dateTo;
   final Value<String> version;
   final Value<String?> groupCode;
+  final Value<int> utcOffset;
   final Value<int> rowid;
   const ScheduleMetaCompanion({
     this.scope = const Value.absent(),
@@ -1019,6 +1063,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
     this.dateTo = const Value.absent(),
     this.version = const Value.absent(),
     this.groupCode = const Value.absent(),
+    this.utcOffset = const Value.absent(),
     this.rowid = const Value.absent(),
   });
   ScheduleMetaCompanion.insert({
@@ -1028,6 +1073,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
     required DateTime dateTo,
     required String version,
     this.groupCode = const Value.absent(),
+    this.utcOffset = const Value.absent(),
     this.rowid = const Value.absent(),
   }) : scope = Value(scope),
        fetchedAt = Value(fetchedAt),
@@ -1041,6 +1087,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
     Expression<DateTime>? dateTo,
     Expression<String>? version,
     Expression<String>? groupCode,
+    Expression<int>? utcOffset,
     Expression<int>? rowid,
   }) {
     return RawValuesInsertable({
@@ -1050,6 +1097,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
       if (dateTo != null) 'date_to': dateTo,
       if (version != null) 'version': version,
       if (groupCode != null) 'group_code': groupCode,
+      if (utcOffset != null) 'utc_offset': utcOffset,
       if (rowid != null) 'rowid': rowid,
     });
   }
@@ -1061,6 +1109,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
     Value<DateTime>? dateTo,
     Value<String>? version,
     Value<String?>? groupCode,
+    Value<int>? utcOffset,
     Value<int>? rowid,
   }) {
     return ScheduleMetaCompanion(
@@ -1070,6 +1119,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
       dateTo: dateTo ?? this.dateTo,
       version: version ?? this.version,
       groupCode: groupCode ?? this.groupCode,
+      utcOffset: utcOffset ?? this.utcOffset,
       rowid: rowid ?? this.rowid,
     );
   }
@@ -1095,6 +1145,9 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
     if (groupCode.present) {
       map['group_code'] = Variable<String>(groupCode.value);
     }
+    if (utcOffset.present) {
+      map['utc_offset'] = Variable<int>(utcOffset.value);
+    }
     if (rowid.present) {
       map['rowid'] = Variable<int>(rowid.value);
     }
@@ -1110,6 +1163,7 @@ class ScheduleMetaCompanion extends UpdateCompanion<ScheduleMetaData> {
           ..write('dateTo: $dateTo, ')
           ..write('version: $version, ')
           ..write('groupCode: $groupCode, ')
+          ..write('utcOffset: $utcOffset, ')
           ..write('rowid: $rowid')
           ..write(')'))
         .toString();
@@ -2253,6 +2307,7 @@ typedef $$ScheduleMetaTableCreateCompanionBuilder =
       required DateTime dateTo,
       required String version,
       Value<String?> groupCode,
+      Value<int> utcOffset,
       Value<int> rowid,
     });
 typedef $$ScheduleMetaTableUpdateCompanionBuilder =
@@ -2263,6 +2318,7 @@ typedef $$ScheduleMetaTableUpdateCompanionBuilder =
       Value<DateTime> dateTo,
       Value<String> version,
       Value<String?> groupCode,
+      Value<int> utcOffset,
       Value<int> rowid,
     });
 
@@ -2302,6 +2358,11 @@ class $$ScheduleMetaTableFilterComposer
 
   ColumnFilters<String> get groupCode => $composableBuilder(
     column: $table.groupCode,
+    builder: (column) => ColumnFilters(column),
+  );
+
+  ColumnFilters<int> get utcOffset => $composableBuilder(
+    column: $table.utcOffset,
     builder: (column) => ColumnFilters(column),
   );
 }
@@ -2344,6 +2405,11 @@ class $$ScheduleMetaTableOrderingComposer
     column: $table.groupCode,
     builder: (column) => ColumnOrderings(column),
   );
+
+  ColumnOrderings<int> get utcOffset => $composableBuilder(
+    column: $table.utcOffset,
+    builder: (column) => ColumnOrderings(column),
+  );
 }
 
 class $$ScheduleMetaTableAnnotationComposer
@@ -2372,6 +2438,9 @@ class $$ScheduleMetaTableAnnotationComposer
 
   GeneratedColumn<String> get groupCode =>
       $composableBuilder(column: $table.groupCode, builder: (column) => column);
+
+  GeneratedColumn<int> get utcOffset =>
+      $composableBuilder(column: $table.utcOffset, builder: (column) => column);
 }
 
 class $$ScheduleMetaTableTableManager
@@ -2411,6 +2480,7 @@ class $$ScheduleMetaTableTableManager
                 Value<DateTime> dateTo = const Value.absent(),
                 Value<String> version = const Value.absent(),
                 Value<String?> groupCode = const Value.absent(),
+                Value<int> utcOffset = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScheduleMetaCompanion(
                 scope: scope,
@@ -2419,6 +2489,7 @@ class $$ScheduleMetaTableTableManager
                 dateTo: dateTo,
                 version: version,
                 groupCode: groupCode,
+                utcOffset: utcOffset,
                 rowid: rowid,
               ),
           createCompanionCallback:
@@ -2429,6 +2500,7 @@ class $$ScheduleMetaTableTableManager
                 required DateTime dateTo,
                 required String version,
                 Value<String?> groupCode = const Value.absent(),
+                Value<int> utcOffset = const Value.absent(),
                 Value<int> rowid = const Value.absent(),
               }) => ScheduleMetaCompanion.insert(
                 scope: scope,
@@ -2437,6 +2509,7 @@ class $$ScheduleMetaTableTableManager
                 dateTo: dateTo,
                 version: version,
                 groupCode: groupCode,
+                utcOffset: utcOffset,
                 rowid: rowid,
               ),
           withReferenceMapper: (p0) => p0

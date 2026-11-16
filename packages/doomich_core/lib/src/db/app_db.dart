@@ -33,6 +33,9 @@ class ScheduleMeta extends Table {
   TextColumn get version => text()();
   TextColumn get groupCode => text().nullable()();
 
+  /// Смещение часового пояса вуза в минутах: расписание показывается по времени вуза
+  IntColumn get utcOffset => integer().withDefault(const Constant(180))();
+
   @override
   Set<Column> get primaryKey => {scope};
 }
@@ -65,8 +68,22 @@ class CachedMessages extends Table {
 class AppDb extends _$AppDb {
   AppDb([QueryExecutor? executor]) : super(executor ?? _open());
 
+  /// История версий схемы: 1 (R1.0), 2 (смещение часового пояса в ScheduleMeta).
   @override
-  int get schemaVersion => 1;
+  int get schemaVersion => 2;
+
+  /// Здесь только кэш, его всегда можно скачать заново. Поэтому при смене схемы
+  /// таблицы пересоздаются: проще и надёжнее пошаговых миграций.
+  @override
+  MigrationStrategy get migration => MigrationStrategy(
+        onCreate: (m) => m.createAll(),
+        onUpgrade: (m, from, to) async {
+          for (final table in allTables.toList().reversed) {
+            await m.deleteTable(table.actualTableName);
+          }
+          await m.createAll();
+        },
+      );
 
   static QueryExecutor _open() => driftDatabase(
         name: 'doomich',

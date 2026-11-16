@@ -37,9 +37,13 @@ final scheduleScopeProvider = Provider<ScheduleScope?>((ref) {
   return null;
 });
 
+/// Время на часах вуза: момент в UTC плюс смещение часового пояса вуза.
+/// Результат хранится как UTC-дата, у которой поля часов и минут совпадают с часами вуза.
+DateTime campusTime(DateTime t, int offsetMinutes) => t.toUtc().add(Duration(minutes: offsetMinutes));
+
 class WeekSchedule {
   const WeekSchedule({required this.lessons, required this.from, required this.to, this.fetchedAt, this.offline = false,
-      this.version});
+      this.version, this.offsetMinutes = 180});
 
   final List<LessonOut> lessons;
   final DateTime from;
@@ -48,9 +52,14 @@ class WeekSchedule {
   final bool offline;
   final String? version;
 
+  /// Смещение часового пояса вуза в минутах
+  final int offsetMinutes;
+
+  DateTime campus(DateTime t) => campusTime(t, offsetMinutes);
+
   List<LessonOut> forDay(DateTime day) => lessons
       .where((l) {
-        final d = l.startsAt.toLocal();
+        final d = campus(l.startsAt);
         return d.year == day.year && d.month == day.month && d.day == day.day;
       })
       .toList();
@@ -92,8 +101,13 @@ class ScheduleController extends AsyncNotifier<WeekSchedule> {
     try {
       final out = await api.schedule(groupId: scope.isTeacher ? null : scope.groupId, subgroup: scope.subgroup,
           teacherKey: scope.teacherKey, from: from, to: to);
-      await _save(db, scope, out, from, to);
-      return WeekSchedule(lessons: out.lessons, from: from, to: to, fetchedAt: DateTime.now(), version: out.version);
+      try {
+        await _save(db, scope, out, from, to);
+      } catch (_) {
+        // Кэш вспомогательный: если запись не удалась, всё равно показываем свежие данные
+      }
+      return WeekSchedule(lessons: out.lessons, from: from, to: to, fetchedAt: DateTime.now(), version: out.version,
+          offsetMinutes: out.utcOffsetMinutes);
     } on ApiException catch (e) {
       if (!e.isNetwork) rethrow;
       return _load(db, scope, from, to);
@@ -113,7 +127,7 @@ class ScheduleController extends AsyncNotifier<WeekSchedule> {
       }
       await db.into(db.scheduleMeta).insertOnConflictUpdate(ScheduleMetaCompanion.insert(
           scope: scope.key, fetchedAt: DateTime.now(), dateFrom: from, dateTo: to, version: out.version,
-          groupCode: Value(out.group?.code)));
+          groupCode: Value(out.group?.code), utcOffset: Value(out.utcOffsetMinutes)));
     });
   }
 
@@ -133,6 +147,7 @@ class ScheduleController extends AsyncNotifier<WeekSchedule> {
       to: to,
       fetchedAt: meta?.fetchedAt,
       offline: true,
+      offsetMinutes: meta?.utcOffset ?? 180,
     );
   }
 }

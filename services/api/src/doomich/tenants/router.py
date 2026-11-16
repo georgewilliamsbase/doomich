@@ -9,6 +9,7 @@ from fastapi import APIRouter, Depends, Query
 from pydantic import BaseModel
 from sqlalchemy import select
 
+from doomich.common.timeutil import utc_offset_minutes
 from doomich.db import get_db
 from doomich.deps import CurrentUser, current_user
 from doomich.models import AcademicTerm, AppRelease, Campus
@@ -43,6 +44,7 @@ class TenantOut(BaseModel):
     campuses: list[CampusOut]
     terms: list[TermOut]
     support_contact: str | None = None
+    utc_offset_minutes: int = 180
 
 
 class ReleaseOut(BaseModel):
@@ -77,6 +79,7 @@ async def tenant(user: CurrentUser = Depends(current_user)) -> TenantOut:
         terms=[TermOut(name=x.name, starts_on=x.starts_on, ends_on=x.ends_on, first_week_odd=x.first_week_odd)
                for x in terms],
         support_contact=t.settings.get("support_contact"),
+        utc_offset_minutes=utc_offset_minutes(t.timezone),
     )
 
 

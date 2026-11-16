@@ -15,12 +15,16 @@ import '../widgets/mic_button.dart';
 
 /// Лента чата с полем ввода. Используется обоими приложениями.
 class ChatView extends ConsumerStatefulWidget {
-  const ChatView({super.key, required this.chatId, this.documentIds, this.showAppBar = true, this.onOpenSource});
+  const ChatView({super.key, required this.chatId, this.documentIds, this.showAppBar = true, this.onOpenSource,
+      this.embedded = false});
 
   final String chatId;
   final List<String>? documentIds;
   final bool showAppBar;
   final void Function(Source s)? onOpenSource;
+
+  /// Чат встроен в правую панель (ПК): без кнопки "назад", курсор сразу в поле ввода
+  final bool embedded;
 
   @override
   ConsumerState<ChatView> createState() => _ChatViewState();
@@ -147,6 +151,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
                   child: TextField(
                     controller: _input,
                     focusNode: _focus,
+                    autofocus: widget.embedded,
                     minLines: 1,
                     maxLines: 6,
                     textInputAction: TextInputAction.send,
@@ -178,6 +183,7 @@ class _ChatViewState extends ConsumerState<ChatView> {
     if (!widget.showAppBar) return body;
     return Scaffold(
       appBar: AppBar(
+        automaticallyImplyLeading: !widget.embedded,
         title: Text(_incognito ? s.incognito : _title(ref, s)),
         actions: [
           IconButton(

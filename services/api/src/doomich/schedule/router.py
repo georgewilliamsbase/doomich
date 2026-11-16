@@ -9,7 +9,7 @@ from pydantic import BaseModel
 from sqlalchemy import select
 
 from doomich.common.errors import AppError, NotFound
-from doomich.common.timeutil import local_now
+from doomich.common.timeutil import local_now, utc_offset_minutes
 from doomich.db import get_db
 from doomich.deps import CurrentUser, current_user
 from doomich.models import ScheduleChange, StudyGroup, Teacher
@@ -50,6 +50,8 @@ class ScheduleOut(BaseModel):
     lessons: list[LessonOut]
     version: str
     generated_at: datetime
+    # Расписание показывается по времени вуза, а не устройства
+    utc_offset_minutes: int
 
 
 class NowNextOut(BaseModel):
@@ -139,6 +141,7 @@ async def schedule(
                        subgroups=list(group.subgroups or [])) if group else None,
         date_from=d_from, date_to=d_to, lessons=lessons, version=version,
         generated_at=local_now(user.tenant.timezone),
+        utc_offset_minutes=utc_offset_minutes(user.tenant.timezone),
     )
 
 

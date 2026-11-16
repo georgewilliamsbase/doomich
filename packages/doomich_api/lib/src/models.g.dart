@@ -902,8 +902,9 @@ class ScheduleOut {
   final List<LessonOut> lessons;
   final String version;
   final DateTime generatedAt;
+  final int utcOffsetMinutes;
 
-  const ScheduleOut({this.group, required this.dateFrom, required this.dateTo, required this.lessons, required this.version, required this.generatedAt});
+  const ScheduleOut({this.group, required this.dateFrom, required this.dateTo, required this.lessons, required this.version, required this.generatedAt, required this.utcOffsetMinutes});
 
   factory ScheduleOut.fromJson(Map<String, dynamic> j) => ScheduleOut(
         group: j['group'] == null ? null : GroupOut.fromJson(j['group'] as Map<String, dynamic>),
@@ -912,6 +913,7 @@ class ScheduleOut {
         lessons: (j['lessons'] as List<dynamic>).map((e) => LessonOut.fromJson(e as Map<String, dynamic>)).toList(),
         version: j['version'] as String,
         generatedAt: DateTime.parse(j['generated_at'] as String),
+        utcOffsetMinutes: (j['utc_offset_minutes'] as num).toInt(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -921,6 +923,7 @@ class ScheduleOut {
         'lessons': lessons.map((e) => e.toJson()).toList(),
         'version': version,
         'generated_at': generatedAt.toUtc().toIso8601String(),
+        'utc_offset_minutes': utcOffsetMinutes,
       };
 }
 
@@ -1040,8 +1043,9 @@ class TenantOut {
   final List<CampusOut> campuses;
   final List<TermOut> terms;
   final String? supportContact;
+  final int utcOffsetMinutes;
 
-  const TenantOut({required this.id, required this.slug, required this.name, this.shortName, required this.timezone, required this.teacherNames, required this.features, required this.bellSchedule, required this.campuses, required this.terms, this.supportContact});
+  const TenantOut({required this.id, required this.slug, required this.name, this.shortName, required this.timezone, required this.teacherNames, required this.features, required this.bellSchedule, required this.campuses, required this.terms, this.supportContact, this.utcOffsetMinutes = 180});
 
   factory TenantOut.fromJson(Map<String, dynamic> j) => TenantOut(
         id: j['id'] as String,
@@ -1055,6 +1059,7 @@ class TenantOut {
         campuses: (j['campuses'] as List<dynamic>).map((e) => CampusOut.fromJson(e as Map<String, dynamic>)).toList(),
         terms: (j['terms'] as List<dynamic>).map((e) => TermOut.fromJson(e as Map<String, dynamic>)).toList(),
         supportContact: j['support_contact'] == null ? null : j['support_contact'] as String,
+        utcOffsetMinutes: j['utc_offset_minutes'] == null ? 180 : (j['utc_offset_minutes'] as num).toInt(),
       );
 
   Map<String, dynamic> toJson() => {
@@ -1069,6 +1074,7 @@ class TenantOut {
         'campuses': campuses.map((e) => e.toJson()).toList(),
         'terms': terms.map((e) => e.toJson()).toList(),
         if (supportContact != null) 'support_contact': supportContact!,
+        'utc_offset_minutes': utcOffsetMinutes,
       };
 }
 

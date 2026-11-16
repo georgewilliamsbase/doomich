@@ -17,13 +17,16 @@ class ChatList extends AsyncNotifier<List<ChatOut>> {
     final db = ref.read(dbProvider);
     try {
       final chats = await api.chats(limit: 200);
-      await db.transaction(() async {
-        await db.delete(db.cachedChats).go();
-        for (final c in chats) {
-          await db.into(db.cachedChats).insert(CachedChatsCompanion.insert(
-              id: c.id, title: Value(c.title), updatedAt: c.updatedAt, documentIds: Value(c.documentIds.join(','))));
-        }
-      });
+      try {
+        // Кэш списка чатов для чтения без сети
+        await db.transaction(() async {
+          await db.delete(db.cachedChats).go();
+          for (final c in chats) {
+            await db.into(db.cachedChats).insert(CachedChatsCompanion.insert(
+                id: c.id, title: Value(c.title), updatedAt: c.updatedAt, documentIds: Value(c.documentIds.join(','))));
+          }
+        });
+      } catch (_) {}
       return chats;
     } on ApiException catch (e) {
       if (!e.isNetwork) rethrow;
@@ -158,7 +161,9 @@ class ChatThread extends Notifier<ChatThreadState> {
     try {
       final msgs = await api.messages(chatId, limit: 100);
       state = state.copyWith(items: msgs.map(ChatItem.fromMessage).toList(), loading: false, offline: false);
-      await _cache(msgs);
+      try {
+        await _cache(msgs);
+      } catch (_) {}
     } on ApiException catch (e) {
       if (e.isNetwork) {
         final rows = await (db.select(db.cachedMessages)

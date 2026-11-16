@@ -688,5 +688,5 @@ class SRu extends S {
 
   @override
   String get hotkeyHint =>
-      'Ctrl+Пробел: голосовой ввод, Ctrl+N: новый чат, Ctrl+K: поиск';
+      'Удерживайте Ctrl+Пробел, чтобы говорить. Ctrl+M: микрофон, Ctrl+N: новый чат';
 }
