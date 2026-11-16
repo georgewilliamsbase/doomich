@@ -1,0 +1,36 @@
+[project]
+name = "doomich-asr"
+version = "1.0.0"
+description = "Сервис распознавания речи Думыча: GigaAM-v3 для русского, Whisper для английского"
+requires-python = ">=3.12"
+dependencies = [
+  "fastapi>=0.115",
+  "uvicorn[standard]>=0.32",
+  "pydantic-settings>=2.6",
+  "numpy>=2.1",
+  "prometheus-client>=0.21",
+]
+
+[project.optional-dependencies]
+# ONNX-модели GigaAM-v3, T-one и Whisper через sherpa-onnx (Apache-2.0), CPU или CUDA
+sherpa = ["sherpa-onnx>=1.10"]
+# Оригинальный GigaAM на PyTorch (MIT), ставится из репозитория авторов
+gigaam = ["torch>=2.4", "torchaudio>=2.4"]
+whisper = ["faster-whisper>=1.1"]
+
+[dependency-groups]
+dev = ["pytest>=8.3", "httpx>=0.28", "ruff>=0.8"]
+
+[build-system]
+requires = ["hatchling>=1.25"]
+build-backend = "hatchling.build"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/doomich_asr"]
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
