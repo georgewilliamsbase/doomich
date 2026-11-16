@@ -28,6 +28,7 @@ class TenantInfo:
     timezone: str
     default_locale: str
     settings: dict[str, Any] = field(default_factory=dict)
+    short_name: str | None = None
 
     def feature(self, name: str, default: bool = True) -> bool:
         return bool(self.settings.get("features", {}).get(name, default))
@@ -61,7 +62,7 @@ TENANT_TTL = 60.0
 
 def tenant_from_row(t: Tenant) -> TenantInfo:
     return TenantInfo(id=t.id, slug=t.slug, name=t.name, timezone=t.timezone,
-                      default_locale=t.default_locale, settings=dict(t.settings or {}))
+                      default_locale=t.default_locale, settings=dict(t.settings or {}), short_name=t.short_name)
 
 
 async def load_tenant(tenant_id: uuid.UUID) -> TenantInfo:

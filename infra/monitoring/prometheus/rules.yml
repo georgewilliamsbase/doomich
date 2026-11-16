@@ -1,0 +1,63 @@
+# Алерты по SLO из docs/04-stage-4-support.md, раздел 3.
+# В тексте алертов нет содержимого запросов и идентификаторов пользователей.
+groups:
+  - name: doomich-slo
+    rules:
+      - alert: ApiDown
+        expr: up{job="api", stack="prod"} == 0
+        for: 2m
+        labels: {severity: P1}
+        annotations: {summary: "Core API ({{ $labels.stack }}) не отвечает 2 минуты"}
+
+      - alert: FirstTokenSlow
+        expr: histogram_quantile(0.95, sum(rate(doomich_llm_first_token_seconds_bucket{stack="prod"}[10m])) by (le)) > 2
+        for: 10m
+        labels: {severity: P2}
+        annotations: {summary: "Первый токен p95 больше 2 с ({{ $value | printf \"%.2f\" }} с)"}
+
+      - alert: VoiceSlow
+        expr: histogram_quantile(0.95, sum(rate(doomich_voice_end_to_audio_seconds_bucket{stack="prod"}[10m])) by (le)) > 3.5
+        for: 10m
+        labels: {severity: P2}
+        annotations: {summary: "Голос: от конца речи до звука p95 больше 3,5 с"}
+
+      - alert: Api5xx
+        expr: |
+          sum(rate(doomich_http_requests_total{stack="prod", status=~"5.."}[5m]))
+            / clamp_min(sum(rate(doomich_http_requests_total{stack="prod"}[5m])), 1e-9) > 0.02
+        for: 5m
+        labels: {severity: P2}
+        annotations: {summary: "Доля ошибок 5xx больше 2%"}
+
+      - alert: DocumentQueueStuck
+        expr: increase(doomich_documents_processed_total{stack="prod"}[30m]) == 0 and on() (sum(doomich_document_processing_seconds_count) > 0)
+        for: 30m
+        labels: {severity: P3}
+        annotations: {summary: "Документы не обрабатываются 30 минут"}
+
+      - alert: ScheduleSyncFailed
+        expr: increase(doomich_schedule_sync_total{status=~"error|needs_review"}[1d]) > 0
+        labels: {severity: P2}
+        annotations: {summary: "Синхронизация расписания: ошибка или резкое изменение объёма, нужна проверка в админке"}
+
+      - alert: GpuHot
+        expr: avg_over_time(DCGM_FI_DEV_GPU_UTIL[30m]) > 85
+        labels: {severity: P3}
+        annotations: {summary: "GPU {{ $labels.gpu }} загружен больше 85% 30 минут"}
+
+      - alert: GpuMemoryFull
+        expr: DCGM_FI_DEV_FB_FREE < 500
+        for: 5m
+        labels: {severity: P2}
+        annotations: {summary: "На GPU {{ $labels.gpu }} почти не осталось памяти"}
+
+      - alert: DiskFull
+        expr: node_filesystem_avail_bytes{fstype!~"tmpfs|overlay"} / node_filesystem_size_bytes{fstype!~"tmpfs|overlay"} < 0.15
+        for: 10m
+        labels: {severity: P2}
+        annotations: {summary: "Свободно меньше 15% на {{ $labels.mountpoint }}"}
+
+      - alert: BackupMissing
+        expr: time() - doomich_backup_last_success_timestamp > 26 * 3600
+        labels: {severity: P2}
+        annotations: {summary: "Ежедневная резервная копия не сделана"}

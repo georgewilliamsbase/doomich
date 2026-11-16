@@ -1,0 +1,41 @@
+// Логи контейнеров в Loki. Перед отправкой вычищаются IP-адреса и токены:
+// приложения их и так не пишут, это вторая линия защиты.
+discovery.docker "containers" {
+  host = "unix:///var/run/docker.sock"
+}
+
+discovery.relabel "containers" {
+  targets = discovery.docker.containers.targets
+  rule {
+    source_labels = ["__meta_docker_container_name"]
+    target_label  = "container"
+  }
+  rule {
+    source_labels = ["__meta_docker_container_label_com_docker_compose_project"]
+    target_label  = "project"
+  }
+}
+
+loki.source.docker "containers" {
+  host       = "unix:///var/run/docker.sock"
+  targets    = discovery.relabel.containers.output
+  forward_to = [loki.process.scrub.receiver]
+}
+
+loki.process "scrub" {
+  stage.replace {
+    expression = "(\\d{1,3}\\.\\d{1,3}\\.\\d{1,3}\\.\\d{1,3})"
+    replace    = "[ip]"
+  }
+  stage.replace {
+    expression = "(?i)(bearer\\s+)[a-z0-9._-]+"
+    replace    = "${1}[token]"
+  }
+  forward_to = [loki.write.local.receiver]
+}
+
+loki.write "local" {
+  endpoint {
+    url = "http://loki:3100/loki/api/v1/push"
+  }
+}

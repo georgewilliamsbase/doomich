@@ -1,0 +1,151 @@
+# Наблюдаемость: Prometheus, Grafana, Loki и Alloy (логи), экспортёры, Uptime Kuma, GlitchTip.
+# Grafana, Loki и GlitchTip используются без изменений как отдельные сервисы (AGPL/BSL не распространяем клиентам).
+#   docker compose -p doomich-mon -f compose.monitoring.yml --env-file .env.monitoring up -d
+x-log: &log
+  driver: json-file
+  options: {max-size: "20m", max-file: "3"}
+
+services:
+  prometheus:
+    image: prom/prometheus:${PROMETHEUS_TAG:-v3.5.0}
+    restart: unless-stopped
+    command: ["--config.file=/etc/prometheus/prometheus.yml", "--storage.tsdb.retention.time=395d",
+              "--web.enable-lifecycle"]
+    volumes:
+      - ../monitoring/prometheus:/etc/prometheus:ro
+      - prometheus:/prometheus
+    networks: [mon, edge, models, app-prod, app-stage]
+    logging: *log
+
+  alertmanager:
+    image: prom/alertmanager:${ALERTMANAGER_TAG:-v0.28.1}
+    restart: unless-stopped
+    volumes:
+      - ../monitoring/prometheus/alertmanager.yml:/etc/alertmanager/alertmanager.yml:ro
+    networks: [mon]
+    logging: *log
+
+  grafana:
+    image: grafana/grafana:${GRAFANA_TAG:-12.1.0}
+    restart: unless-stopped
+    environment:
+      GF_SERVER_ROOT_URL: https://${PROD_HOST}/grafana/
+      GF_SERVER_SERVE_FROM_SUB_PATH: "true"
+      GF_AUTH_ANONYMOUS_ENABLED: "false"
+      GF_ANALYTICS_REPORTING_ENABLED: "false"
+      GF_ANALYTICS_CHECK_FOR_UPDATES: "false"
+      GF_SECURITY_ADMIN_PASSWORD__FILE: /run/secrets/grafana_admin_password
+      GF_SECURITY_ALLOW_EMBEDDING: "true"
+    secrets: [grafana_admin_password]
+    volumes:
+      - ../monitoring/grafana/provisioning:/etc/grafana/provisioning:ro
+      - ../monitoring/grafana/dashboards:/var/lib/grafana/dashboards:ro
+      - grafana:/var/lib/grafana
+    networks: [mon, edge]
+    logging: *log
+
+  loki:
+    image: grafana/loki:${LOKI_TAG:-3.5.0}
+    restart: unless-stopped
+    command: ["-config.file=/etc/loki/loki.yml"]
+    volumes:
+      - ../monitoring/loki/loki.yml:/etc/loki/loki.yml:ro
+      - loki:/loki
+    networks: [mon]
+    logging: *log
+
+  alloy:
+    image: grafana/alloy:${ALLOY_TAG:-v1.10.0}
+    restart: unless-stopped
+    command: ["run", "/etc/alloy/config.alloy", "--storage.path=/var/lib/alloy"]
+    volumes:
+      - ../monitoring/alloy/config.alloy:/etc/alloy/config.alloy:ro
+      - /var/run/docker.sock:/var/run/docker.sock:ro
+    networks: [mon]
+    logging: *log
+
+  node-exporter:
+    image: prom/node-exporter:${NODE_EXPORTER_TAG:-v1.9.1}
+    restart: unless-stopped
+    pid: host
+    command: ["--path.rootfs=/host"]
+    volumes: ["/:/host:ro,rslave"]
+    networks: [mon]
+    logging: *log
+
+  cadvisor:
+    image: gcr.io/cadvisor/cadvisor:${CADVISOR_TAG:-v0.52.1}
+    restart: unless-stopped
+    privileged: true
+    volumes:
+      - /:/rootfs:ro
+      - /var/run:/var/run:ro
+      - /sys:/sys:ro
+      - /var/lib/docker/:/var/lib/docker:ro
+    networks: [mon]
+    logging: *log
+
+  dcgm-exporter:
+    image: nvcr.io/nvidia/k8s/dcgm-exporter:${DCGM_TAG:-4.2.3-4.1.3-ubuntu22.04}
+    restart: unless-stopped
+    profiles: ["gpu"]
+    cap_add: [SYS_ADMIN]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, count: all, capabilities: [gpu]}]
+    networks: [mon]
+    logging: *log
+
+  uptime-kuma:
+    image: louislam/uptime-kuma:${KUMA_TAG:-1.23.16}
+    restart: unless-stopped
+    volumes: [kuma:/app/data]
+    networks: [mon, edge]
+    logging: *log
+
+  glitchtip:
+    image: glitchtip/glitchtip:${GLITCHTIP_TAG:-v5.1}
+    restart: unless-stopped
+    profiles: ["glitchtip"]
+    environment:
+      DATABASE_URL: postgres://glitchtip:glitchtip@glitchtip-db:5432/glitchtip
+      REDIS_URL: redis://glitchtip-valkey:6379/0
+      GLITCHTIP_DOMAIN: https://${PROD_HOST}/glitchtip
+      ENABLE_USER_REGISTRATION: "false"
+      GLITCHTIP_MAX_EVENT_LIFE_DAYS: "30"
+      SECRET_KEY_FILE: /run/secrets/glitchtip_secret
+    secrets: [glitchtip_secret]
+    depends_on: [glitchtip-db, glitchtip-valkey]
+    networks: [mon, edge]
+    logging: *log
+
+  glitchtip-db:
+    image: postgres:17-alpine
+    profiles: ["glitchtip"]
+    environment: {POSTGRES_USER: glitchtip, POSTGRES_PASSWORD: glitchtip, POSTGRES_DB: glitchtip}
+    volumes: [glitchtip-db:/var/lib/postgresql/data]
+    networks: [mon]
+
+  glitchtip-valkey:
+    image: valkey/valkey:8.1-alpine
+    profiles: ["glitchtip"]
+    networks: [mon]
+
+secrets:
+  grafana_admin_password: {file: ./secrets/grafana_admin_password}
+  glitchtip_secret: {file: ./secrets/glitchtip_secret}
+
+volumes:
+  prometheus:
+  grafana:
+  loki:
+  kuma:
+  glitchtip-db:
+
+networks:
+  mon:
+  edge: {name: doomich-edge, external: true}
+  models: {name: doomich-models, external: true}
+  app-prod: {name: doomich-prod_app, external: true}
+  app-stage: {name: doomich-stage_app, external: true}

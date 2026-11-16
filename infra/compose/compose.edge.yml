@@ -1,0 +1,39 @@
+# Вход на сервер: nginx с TLS (сертификаты Let's Encrypt через certbot) и статика админ-панели.
+#   docker compose -p doomich-edge -f compose.edge.yml --env-file .env.edge up -d
+services:
+  nginx:
+    image: nginx:${NGINX_TAG:-1.29-alpine}
+    restart: unless-stopped
+    ports: ["80:80", "443:443"]
+    environment:
+      PROD_HOST: ${PROD_HOST}
+      STAGE_HOST: ${STAGE_HOST}
+      VPN_SUBNET: ${VPN_SUBNET:-10.8.0.0/24}
+      NGINX_ENVSUBST_OUTPUT_DIR: /etc/nginx/conf.d
+    volumes:
+      - ./nginx/doomich.conf.template:/etc/nginx/templates/default.conf.template:ro
+      - ./nginx/doomich-common.inc.template:/etc/nginx/templates/doomich-common.inc.template:ro
+      - ./nginx/doomich-locations.inc.template:/etc/nginx/templates/doomich-locations.inc.template:ro
+      - letsencrypt:/etc/letsencrypt:ro
+      - acme:/var/www/acme:ro
+      - ${ADMIN_DIST:-/srv/doomich/admin}:/srv/admin:ro
+    networks: [edge]
+    logging:
+      driver: json-file
+      options: {max-size: "20m", max-file: "5"}
+
+  certbot:
+    image: certbot/certbot:${CERTBOT_TAG:-v4.1.1}
+    volumes:
+      - letsencrypt:/etc/letsencrypt
+      - acme:/var/www/acme
+    entrypoint: ["/bin/sh", "-c", "trap exit TERM; while :; do certbot renew --webroot -w /var/www/acme --quiet; sleep 12h; done"]
+    restart: unless-stopped
+
+volumes:
+  letsencrypt:
+  acme:
+
+networks:
+  edge:
+    name: doomich-edge

@@ -1,0 +1,25 @@
+# Вход: TLS 1.3, HTTP/2, лимиты. В журнале нет IP-адресов и query-строк.
+# Шаблон обрабатывает envsubst из образа nginx (переменные PROD_HOST, STAGE_HOST, VPN_SUBNET).
+
+log_format doomich '$time_iso8601 "$request_method $uri" $status $body_bytes_sent $request_time';
+access_log /var/log/nginx/access.log doomich;
+
+# Ключ лимитов: адрес в памяти nginx, на диск не пишется
+limit_req_zone $binary_remote_addr zone=api:20m rate=20r/s;
+limit_req_zone $binary_remote_addr zone=auth:10m rate=10r/m;
+limit_conn_zone $binary_remote_addr zone=conn:10m;
+
+map $http_upgrade $connection_upgrade {
+  default upgrade;
+  ''      close;
+}
+
+server {
+  listen 80;
+  server_name ${PROD_HOST} ${STAGE_HOST};
+  location /.well-known/acme-challenge/ { root /var/www/acme; }
+  location / { return 301 https://$host$request_uri; }
+}
+
+# Общие настройки для стеков prod и stage
+include /etc/nginx/conf.d/doomich-common.inc;

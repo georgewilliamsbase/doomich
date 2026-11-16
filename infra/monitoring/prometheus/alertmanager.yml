@@ -1,0 +1,11 @@
+# Алерты уходят в чат команды через вебхук (адрес задаётся при развёртывании Ansible).
+route:
+  receiver: team
+  group_by: [alertname]
+  group_wait: 30s
+  repeat_interval: 4h
+receivers:
+  - name: team
+    webhook_configs:
+      - url: http://alert-relay:8080/alert
+        send_resolved: true

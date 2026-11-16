@@ -1,5 +1,5 @@
 SHELL := /bin/bash
-COMPOSE := docker compose -f infra/compose/docker-compose.yml -f infra/compose/compose.dev.yml --env-file infra/compose/.env.dev
+COMPOSE := docker compose -f infra/compose/compose.dev.yml --env-file infra/compose/.env.dev
 
 .PHONY: help dev dev-down dev-logs seed test test-api test-services test-ml test-admin test-dart lint openapi dart-models licenses
 
@@ -17,6 +17,7 @@ infra/compose/.env.dev:
 	cp infra/compose/.env.dev.example infra/compose/.env.dev
 
 dev: infra/compose/.env.dev
+	infra/compose/dev-secrets.sh
 	$(COMPOSE) up -d --build
 	$(COMPOSE) exec api doomich-manage migrate
 	$(COMPOSE) exec api doomich-manage seed-demo

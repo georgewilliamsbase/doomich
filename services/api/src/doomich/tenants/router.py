@@ -72,7 +72,7 @@ async def tenant(user: CurrentUser = Depends(current_user)) -> TenantOut:
                                  .order_by(AcademicTerm.starts_on))).all()
     features = {**DEFAULT_FEATURES, **{k: bool(v) for k, v in (t.settings.get("features") or {}).items()}}
     return TenantOut(
-        id=t.id, slug=t.slug, name=t.name, short_name=t.settings.get("short_name"), timezone=t.timezone,
+        id=t.id, slug=t.slug, name=t.name, short_name=t.short_name, timezone=t.timezone,
         teacher_names=t.teacher_names_mode, features=features,
         bell_schedule=[list(x) for x in t.settings.get("bell_schedule", [])],
         campuses=[CampusOut(id=c.id, name=c.name, address=c.address, lat=c.lat, lon=c.lon) for c in campuses],

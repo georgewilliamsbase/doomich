@@ -126,6 +126,20 @@ async def test_block_user(client, env):
     assert (await client.get("/v1/me", headers=user["headers"])).status_code == 403
 
 
+async def test_tenant_settings_reach_client(client, env):
+    """Краткое имя и возможности, заданные в панели, клиент видит в /v1/tenant."""
+    h = await admin_headers(client)
+    r = await client.patch(f"/admin/v1/tenants/{env.tenant_id}", headers=h,
+                           json={"short_name": "ТВ", "settings": {"features": {"navigation": True},
+                                                                   "support_contact": "help@example.ru"}})
+    assert r.status_code == 200, r.text
+    user = await register(client, env.codes[0])
+    info = (await client.get("/v1/tenant", headers=user["headers"])).json()
+    assert info["short_name"] == "ТВ"
+    assert info["features"]["navigation"] is True and info["features"]["voice"] is True
+    assert info["support_contact"] == "help@example.ru"
+
+
 async def test_schema_matches_models(database):
     """Модели SQLAlchemy и миграции не должны разъезжаться."""
     from sqlalchemy import text

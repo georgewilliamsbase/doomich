@@ -1,0 +1,98 @@
+# Стек разработки на ноутбуке: без GPU, ИИ в режиме заглушек (ADR-013).
+#   make dev            поднять
+#   make dev-down       остановить
+# С профилем lite вместо заглушки LLM работает маленькая модель в llama.cpp на CPU:
+#   docker compose -f infra/compose/compose.dev.yml --profile lite up -d
+# (положите GGUF-файл в infra/compose/models/llm.gguf и выставьте DOOMICH_LLM_BACKEND=openai)
+
+x-dev-env: &dev-env
+  DOOMICH_ENV: dev
+  DOOMICH_PUBLIC_BASE_URL: http://localhost:8000
+  DOOMICH_CORS_ORIGINS: http://localhost:5173
+  DOOMICH_REDIS_URL: redis://valkey:6379/0
+  DOOMICH_DATA_DIR: /data
+  DOOMICH_SECRETS_DIR: /run/secrets
+  DOOMICH_LLM_BACKEND: ${DOOMICH_LLM_BACKEND:-mock}
+  DOOMICH_LLM_URL: http://llama:8080/v1
+  DOOMICH_LLM_MODEL: local
+  DOOMICH_EMBED_BACKEND: mock
+  DOOMICH_RERANK_BACKEND: mock
+  DOOMICH_ASR_BACKEND: http
+  DOOMICH_ASR_URL: http://asr:8000
+  DOOMICH_TTS_BACKEND: http
+  DOOMICH_TTS_URL: http://tts:8000
+  DOOMICH_NAV_BACKEND: mock
+  DOOMICH_PARSER_BACKEND: basic
+  DOOMICH_ARGON2_TIME_COST: "1"
+  DOOMICH_ARGON2_MEMORY_KIB: "8192"
+
+x-dev-api: &dev-api
+  build: ../../services/api
+  environment: *dev-env
+  secrets: [doomich_jwt_secret, doomich_master_keys, doomich_invite_pepper, doomich_database_url, doomich_database_sys_url]
+  volumes:
+    - ../../services/api/src:/app/src:ro
+    - files:/data
+  depends_on:
+    postgres: {condition: service_healthy}
+    valkey: {condition: service_started}
+
+services:
+  postgres:
+    image: pgvector/pgvector:${PG_TAG:-0.8.1-pg17}
+    environment:
+      POSTGRES_DB: doomich
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD_FILE: /run/secrets/db_sys_password
+    secrets: [db_sys_password, db_app_password]
+    volumes:
+      - pgdata:/var/lib/postgresql/data
+      - ./postgres/init.sh:/docker-entrypoint-initdb.d/10-doomich.sh:ro
+    ports: ["127.0.0.1:5432:5432"]
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U postgres -d doomich"]
+      interval: 5s
+      retries: 20
+
+  valkey:
+    image: valkey/valkey:${VALKEY_TAG:-8.1-alpine}
+
+  api:
+    <<: *dev-api
+    command: ["sh", "-c", "doomich-manage migrate && uvicorn --factory doomich.main:create_app --host 0.0.0.0 --port 8000 --reload --reload-dir /app/src --no-access-log"]
+    ports: ["8000:8000"]
+
+  worker:
+    <<: *dev-api
+    command: ["celery", "-A", "doomich.worker.app", "worker", "-Q", "documents,schedule,maintenance,lectures", "--concurrency", "2"]
+
+  beat:
+    <<: *dev-api
+    command: ["celery", "-A", "doomich.worker.app", "beat", "--schedule", "/tmp/celerybeat-schedule"]
+
+  asr:
+    build: ../../services/asr
+    environment: {ASR_RU_BACKEND: mock, ASR_EN_BACKEND: mock}
+
+  tts:
+    build: ../../services/tts
+    environment: {TTS_BACKEND: mock, TTS_CACHE_DIR: /tmp/tts-cache}
+
+  llama:
+    image: ghcr.io/ggml-org/llama.cpp:${LLAMA_TAG:-server}
+    profiles: ["lite"]
+    command: ["-m", "/models/llm.gguf", "--host", "0.0.0.0", "--port", "8080", "--jinja", "-c", "8192"]
+    volumes: ["./models:/models:ro"]
+
+secrets:
+  db_sys_password: {file: ./secrets/db_sys_password}
+  db_app_password: {file: ./secrets/db_app_password}
+  doomich_jwt_secret: {file: ./secrets/doomich_jwt_secret}
+  doomich_master_keys: {file: ./secrets/doomich_master_keys}
+  doomich_invite_pepper: {file: ./secrets/doomich_invite_pepper}
+  doomich_database_url: {file: ./secrets/doomich_database_url}
+  doomich_database_sys_url: {file: ./secrets/doomich_database_sys_url}
+
+volumes:
+  pgdata:
+  files:

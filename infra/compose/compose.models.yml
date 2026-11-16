@@ -1,0 +1,127 @@
+# Модельный слой на GPU: один на сервер, им пользуются и stage, и prod.
+#   docker compose -p doomich-models -f compose.models.yml --env-file .env.models up -d
+# Модели лежат на томе /srv/doomich/models (их скачивает и проверяет по хэшам ML-платформа: dml models pull).
+# Распределение по GPU задаётся переменными *_GPU (см. docs/06-server-requirements.md, раздел 3).
+
+x-gpu: &gpu
+  restart: unless-stopped
+  networks: [models]
+  logging:
+    driver: json-file
+    options: {max-size: "20m", max-file: "5"}
+  volumes:
+    - ${MODELS_DIR:-/srv/doomich/models}:/models:ro
+
+services:
+  vllm-llm:
+    <<: *gpu
+    image: vllm/vllm-openai:${VLLM_TAG}
+    ipc: host
+    command: >
+      --model /models/llm/${LLM_DIR} --served-model-name ${LLM_MODEL}
+      --max-model-len ${LLM_MAX_LEN:-32768} --gpu-memory-utilization ${LLM_GPU_UTIL:-0.85}
+      --enable-auto-tool-choice --tool-call-parser ${LLM_TOOL_PARSER:-hermes}
+      --enable-lora --max-loras ${MAX_LORAS:-4} --max-lora-rank 64
+      --enable-prefix-caching --disable-log-requests ${LLM_EXTRA_ARGS:-}
+    environment:
+      VLLM_ALLOW_RUNTIME_LORA_UPDATING: "true"
+      HF_HUB_OFFLINE: "1"
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${LLM_GPU:-0}"], capabilities: [gpu]}]
+
+  vllm-embed:
+    <<: *gpu
+    image: vllm/vllm-openai:${VLLM_TAG}
+    command: >
+      --model /models/embed/${EMBED_DIR} --served-model-name ${EMBED_MODEL} --task embed
+      --gpu-memory-utilization ${EMBED_GPU_UTIL:-0.07} --max-model-len 8192 --disable-log-requests
+    environment: {HF_HUB_OFFLINE: "1"}
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+  vllm-rerank:
+    <<: *gpu
+    image: vllm/vllm-openai:${VLLM_TAG}
+    command: >
+      --model /models/rerank/${RERANK_DIR} --served-model-name ${RERANK_MODEL} --task score
+      --gpu-memory-utilization ${RERANK_GPU_UTIL:-0.07} --max-model-len 8192 --disable-log-requests
+    environment: {HF_HUB_OFFLINE: "1"}
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+  asr:
+    <<: *gpu
+    image: ${REGISTRY}/doomich-asr:${TAG}
+    environment:
+      ASR_RU_BACKEND: ${ASR_RU_BACKEND:-sherpa}
+      ASR_RU_MODEL: /models/asr/${ASR_RU_DIR:-gigaam-v3-rnnt}
+      ASR_EN_BACKEND: ${ASR_EN_BACKEND:-faster_whisper}
+      ASR_EN_MODEL: /models/asr/${ASR_EN_DIR:-whisper-large-v3-turbo}
+      ASR_DEVICE: cuda
+      ASR_PROFILES_DIR: /models/asr/profiles
+    # Аудио обрабатывается в памяти, /dev/shm нужен только бэкенду gigaam
+    shm_size: 512m
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+  tts:
+    <<: *gpu
+    image: ${REGISTRY}/doomich-tts:${TAG}
+    environment:
+      TTS_BACKEND: ${TTS_BACKEND:-openai_speech}
+      TTS_URL: ${TTS_MODEL_URL:-http://tts-model:8000/v1}
+      TTS_MODEL: ${TTS_MODEL:-qwen3-tts}
+      TTS_VOICE: ${TTS_VOICE:-default}
+      TTS_STRESS_STYLE: ${TTS_STRESS_STYLE:-none}
+      TTS_DICTS_DIR: /models/tts/dicts
+      TTS_DEVICE: cuda
+    volumes:
+      - ${MODELS_DIR:-/srv/doomich/models}:/models:ro
+      - tts-cache:/var/cache/doomich-tts
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+  # Сервер выбранной TTS-модели с OpenAI-совместимым /v1/audio/speech (задаётся по итогам бенчмарка)
+  tts-model:
+    <<: *gpu
+    image: ${TTS_MODEL_IMAGE:-vllm/vllm-openai:${VLLM_TAG}}
+    command: ${TTS_MODEL_COMMAND:---model /models/tts/model --served-model-name qwen3-tts --gpu-memory-utilization 0.08}
+    profiles: ["tts-model"]
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+  nav:
+    <<: *gpu
+    image: ${REGISTRY}/doomich-nav:${TAG}
+    profiles: ["r2"]
+    environment:
+      NAV_BACKEND: ${NAV_BACKEND:-dinov2}
+      NAV_INDEX_DIR: /indexes
+      NAV_DEVICE: cuda
+    volumes:
+      - ${MODELS_DIR:-/srv/doomich/models}:/models:ro
+      - nav-indexes:/indexes
+    deploy:
+      resources:
+        reservations:
+          devices: [{driver: nvidia, device_ids: ["${AUX_GPU:-0}"], capabilities: [gpu]}]
+
+volumes:
+  tts-cache:
+  nav-indexes:
+
+networks:
+  models:
+    name: doomich-models
