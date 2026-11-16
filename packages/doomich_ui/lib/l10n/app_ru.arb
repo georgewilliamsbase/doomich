@@ -1,0 +1,280 @@
+{
+  "@@locale": "ru",
+  "appName": "Думыч",
+  "tagline": "ИИ-помощник студента и преподавателя",
+  "next": "Далее",
+  "back": "Назад",
+  "cancel": "Отмена",
+  "save": "Сохранить",
+  "done": "Готово",
+  "retry": "Повторить",
+  "delete": "Удалить",
+  "rename": "Переименовать",
+  "close": "Закрыть",
+  "copy": "Копировать",
+  "copied": "Скопировано",
+  "search": "Поиск",
+  "ok": "Хорошо",
+  "loading": "Загрузка...",
+  "send": "Отправить",
+  "stop": "Остановить",
+  "welcomeTitle": "Привет! Я Думыч",
+  "welcomeBody": "Отвечаю на вопросы текстом и голосом, знаю твоё расписание и разбираюсь в твоих методичках.",
+  "featureChat": "Чат и голос: спроси \"Какая у меня следующая пара?\"",
+  "featureSchedule": "Расписание группы, работает и без интернета",
+  "featureDocs": "Ответы по PDF, DOCX и XLSX со ссылками на страницу",
+  "featurePrivacy": "Без телефона и почты: только псевдоним",
+  "language": "Язык",
+  "languageSystem": "Как в системе",
+  "theme": "Тема",
+  "themeSystem": "Как в системе",
+  "themeLight": "Светлая",
+  "themeDark": "Тёмная",
+  "haveAccount": "У меня уже есть аккаунт",
+  "start": "Начать",
+  "inviteTitle": "Код приглашения",
+  "inviteHint": "Код вида ABCD-EFGH выдают в деканате или куратор группы.",
+  "inviteField": "Код приглашения",
+  "inviteScan": "Сканировать QR",
+  "inviteNoCode": "Где взять код?",
+  "inviteNoCodeBody": "Пока Думыч работает в пилоте, вход только по приглашениям. Спросите код у куратора группы или в деканате.",
+  "inviteFor": "Код для: {tenant}",
+  "@inviteFor": {
+    "placeholders": {
+      "tenant": {
+        "type": "String"
+      }
+    }
+  },
+  "roleStudent": "студент",
+  "roleTeacher": "преподаватель",
+  "roleStaff": "сотрудник",
+  "registerTitle": "Создание аккаунта",
+  "nickname": "Псевдоним",
+  "nicknameHint": "3-24 символа. Не используйте настоящее имя.",
+  "nicknameSuggest": "Придумать",
+  "nicknameTaken": "Этот псевдоним уже занят",
+  "nicknameInvalid": "Буквы, цифры, точка, дефис и подчёркивание, от 3 до 24 символов",
+  "nicknameLooksLikeName": "Похоже на имя и фамилию. Лучше выбрать псевдоним, по которому вас не узнать.",
+  "password": "Пароль",
+  "passwordRepeat": "Повторите пароль",
+  "passwordHint": "Не меньше 10 символов",
+  "passwordMismatch": "Пароли не совпадают",
+  "passwordWeak": "Слабый",
+  "passwordFair": "Средний",
+  "passwordGood": "Хороший",
+  "passwordStrong": "Сильный",
+  "createAccount": "Создать аккаунт",
+  "recoveryTitle": "Код восстановления",
+  "recoveryBody": "Это единственный способ восстановить доступ, если забудете пароль: почты и телефона у нас нет. Сохраните код в надёжном месте.",
+  "recoverySaveFile": "Сохранить в файл",
+  "recoveryShare": "Поделиться",
+  "recoveryConfirm": "Я сохранил код восстановления",
+  "termsTitle": "Правила и данные",
+  "termsAccept": "Принимаю правила",
+  "termsOpen": "Пользовательское соглашение",
+  "dataOpen": "Какие данные мы обрабатываем",
+  "groupTitle": "Ваша группа",
+  "groupBody": "Группа нужна для расписания. Её можно хранить на сервере (тогда ассистент знает её на всех устройствах) или только на этом устройстве.",
+  "groupSearch": "Найти группу",
+  "groupOnServer": "Хранить на сервере",
+  "groupOnDevice": "Только на этом устройстве",
+  "groupLater": "Выбрать позже",
+  "subgroup": "Подгруппа",
+  "subgroupAny": "Без подгруппы",
+  "loginTitle": "Вход",
+  "login": "Войти",
+  "forgotPassword": "Забыли пароль?",
+  "recoverTitle": "Восстановление доступа",
+  "recoveryCode": "Код восстановления",
+  "newPassword": "Новый пароль",
+  "recover": "Восстановить",
+  "newRecoveryCode": "Новый код восстановления",
+  "newRecoveryCodeBody": "Старый код больше не работает. Сохраните новый.",
+  "qrLoginTitle": "Вход по QR с телефона",
+  "qrLoginBody": "Откройте Думыч на телефоне: Настройки, Войти на ПК, и наведите камеру на код.",
+  "qrApproveTitle": "Войти на компьютере?",
+  "qrApproveBody": "Подтвердите, только если код показан на вашем компьютере.",
+  "qrApprove": "Войти",
+  "signInOnPc": "Войти на ПК",
+  "tabChat": "Чат",
+  "tabSchedule": "Расписание",
+  "tabDocuments": "Документы",
+  "tabSettings": "Настройки",
+  "tabMore": "Ещё",
+  "chats": "Чаты",
+  "newChat": "Новый чат",
+  "incognito": "Инкогнито",
+  "incognitoHint": "Этот чат не сохраняется на сервере и исчезнет после закрытия.",
+  "chatEmpty": "Спросите что угодно: объясню тему, помогу с задачей, найду ответ в методичке.",
+  "chatSuggest1": "Какая у меня следующая пара?",
+  "chatSuggest2": "Объясни производную простыми словами",
+  "chatSuggest3": "Когда экзамен по физике?",
+  "messageHint": "Сообщение",
+  "holdToTalk": "Удерживайте, чтобы говорить",
+  "tapToTalk": "Нажмите, чтобы говорить",
+  "listening": "Слушаю...",
+  "thinking": "Думаю...",
+  "speaking": "Отвечаю",
+  "readAloud": "Читать ответы вслух",
+  "speak": "Озвучить",
+  "attachDocument": "Спросить по документу",
+  "toolSchedule": "Смотрю расписание",
+  "toolDocuments": "Ищу в документах",
+  "toolGeneric": "Работаю с данными вуза",
+  "sources": "Источники",
+  "page": "стр. {page}",
+  "@page": {
+    "placeholders": {
+      "page": {
+        "type": "String"
+      }
+    }
+  },
+  "sheet": "лист {sheet}",
+  "@sheet": {
+    "placeholders": {
+      "sheet": {
+        "type": "String"
+      }
+    }
+  },
+  "feedbackGood": "Хороший ответ",
+  "feedbackBad": "Плохой ответ",
+  "feedbackTitle": "Что не так?",
+  "feedbackWrong": "Ответ неверный",
+  "feedbackNoSource": "Нет ссылки на источник",
+  "feedbackVoice": "Плохо распознал или озвучил",
+  "feedbackOther": "Другое",
+  "feedbackComment": "Комментарий (необязательно)",
+  "feedbackShare": "Приложить вопрос и ответ, чтобы команда разобралась",
+  "feedbackThanks": "Спасибо за оценку!",
+  "aiNotice": "Ответы генерирует ИИ и могут содержать ошибки.",
+  "today": "Сегодня",
+  "tomorrow": "Завтра",
+  "week": "Неделя",
+  "day": "День",
+  "nowLesson": "Сейчас",
+  "nextLesson": "Далее",
+  "noLessons": "Занятий нет",
+  "noGroup": "Группа не выбрана",
+  "chooseGroup": "Выбрать группу",
+  "offlineUpdated": "Без сети. Обновлено {time}",
+  "@offlineUpdated": {
+    "placeholders": {
+      "time": {
+        "type": "String"
+      }
+    }
+  },
+  "cancelled": "Отменено",
+  "room": "ауд. {room}",
+  "@room": {
+    "placeholders": {
+      "room": {
+        "type": "String"
+      }
+    }
+  },
+  "teacherMode": "Расписание преподавателя",
+  "teacherName": "Ваше имя как в расписании",
+  "teacherNameHint": "Хранится только на этом устройстве, на сервер уходит лишь обезличенный ключ.",
+  "kindLecture": "Лекция",
+  "kindPractice": "Практика",
+  "kindLab": "Лабораторная",
+  "kindExam": "Экзамен",
+  "kindCredit": "Зачёт",
+  "kindConsultation": "Консультация",
+  "kindOther": "Занятие",
+  "documents": "Документы",
+  "upload": "Загрузить",
+  "documentsEmpty": "Загрузите методичку, конспект или таблицу, и я буду отвечать по ним со ссылками на страницы.",
+  "docLimits": "PDF, DOCX, XLSX, PPTX до 20 МБ",
+  "statusProcessing": "Обрабатывается",
+  "statusReady": "Готов",
+  "statusFailed": "Ошибка",
+  "askDocument": "Спросить по документу",
+  "deleteDocument": "Удалить документ?",
+  "deleteDocumentBody": "Файл и его индекс удалятся с сервера.",
+  "pages": "{count} стр.",
+  "@pages": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "sourceTitle": "Фрагмент документа",
+  "settings": "Настройки",
+  "appearance": "Оформление",
+  "voice": "Голос",
+  "speechRate": "Скорость речи",
+  "pttMode": "Режим кнопки микрофона",
+  "pttHold": "Удерживать",
+  "pttToggle": "Нажать и ещё раз нажать",
+  "privacy": "Приватность",
+  "historyRetention": "Хранить историю чатов",
+  "days": "{count} дн.",
+  "@days": {
+    "placeholders": {
+      "count": {
+        "type": "int"
+      }
+    }
+  },
+  "dontStore": "Не хранить",
+  "incognitoDefault": "Новые чаты в режиме инкогнито",
+  "account": "Аккаунт",
+  "changePassword": "Сменить пароль",
+  "oldPassword": "Текущий пароль",
+  "sessions": "Устройства",
+  "thisDevice": "Это устройство",
+  "logout": "Выйти",
+  "deleteAccount": "Удалить аккаунт",
+  "deleteAccountBody": "Чаты, документы и настройки удалятся сразу, из резервных копий в течение 30 дней. Отменить нельзя.",
+  "confirmPassword": "Введите пароль для подтверждения",
+  "about": "О приложении",
+  "version": "Версия {version}",
+  "@version": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "reportProblem": "Сообщить о проблеме",
+  "legal": "Документы",
+  "updateAvailable": "Доступна версия {version}",
+  "@updateAvailable": {
+    "placeholders": {
+      "version": {
+        "type": "String"
+      }
+    }
+  },
+  "updateInstall": "Обновить",
+  "errNetwork": "Нет связи с сервером. Проверьте интернет.",
+  "errBadCredentials": "Неверный псевдоним или пароль",
+  "errRateLimited": "Слишком много попыток. Подождите немного.",
+  "errInviteInvalid": "Код не найден. Проверьте, нет ли опечатки.",
+  "errInviteUsed": "Этот код уже использован",
+  "errInviteExpired": "Срок действия кода истёк",
+  "errInviteRevoked": "Код отозван",
+  "errPasswordWeak": "Пароль слишком простой",
+  "errBadRecovery": "Неверный псевдоним или код восстановления",
+  "errFileTooLarge": "Файл больше 20 МБ",
+  "errUnsupportedType": "Поддерживаются PDF, DOCX, XLSX и PPTX",
+  "errDocumentsLimit": "Достигнут лимит документов",
+  "errNoSpeech": "Не расслышал. Попробуйте ещё раз.",
+  "errMicPermission": "Нет доступа к микрофону. Разрешите его в настройках.",
+  "errLlm": "Ассистент сейчас недоступен. Попробуйте позже.",
+  "errHistoryDisabled": "История отключена в настройках, чат откроется в режиме инкогнито.",
+  "errGeneric": "Что-то пошло не так",
+  "errBlocked": "Аккаунт заблокирован",
+  "docFailed_virus_found": "Файл не прошёл антивирусную проверку",
+  "docFailed_needs_ocr": "Похоже на скан без текста",
+  "docFailed_too_many_pages": "Больше 300 страниц",
+  "docFailed_empty_document": "В документе нет текста",
+  "docFailed_pdf_encrypted": "PDF защищён паролем",
+  "hotkeyHint": "Ctrl+Пробел: голосовой ввод, Ctrl+N: новый чат, Ctrl+K: поиск"
+}

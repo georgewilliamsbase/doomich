@@ -61,6 +61,7 @@ async def _seed_demo() -> None:
                                                         ["14:00", "15:30"], ["15:40", "17:10"]],
                                       "features": {"navigation": True, "courses": True}})
             s.add(tenant)
+            await s.flush()
             s.add(Campus(id=uuid.uuid4(), tenant_id=tenant.id, name="Главный кампус", address="ул. Примерная, 1"))
             today = date.today()
             s.add(AcademicTerm(id=uuid.uuid4(), tenant_id=tenant.id, name="Демо-семестр",

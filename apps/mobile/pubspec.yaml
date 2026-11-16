@@ -1,0 +1,34 @@
+name: doomich_mobile
+description: Думыч для Android (позже iOS).
+publish_to: none
+version: 1.0.0+1
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_localizations:
+    sdk: flutter
+  doomich_api:
+    path: ../../packages/doomich_api
+  doomich_core:
+    path: ../../packages/doomich_core
+  doomich_ui:
+    path: ../../packages/doomich_ui
+  flutter_riverpod: ^3.5.0
+  go_router: ^18.1.4
+  app_links: ^7.2.2
+  mobile_scanner: ^7.5.0
+  receive_sharing_intent: ^1.9.0
+  share_plus: ^13.3.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^6.0.0
+
+flutter:
+  uses-material-design: true

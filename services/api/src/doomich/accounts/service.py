@@ -36,13 +36,14 @@ from doomich.security.tokens import AccessClaims, hash_refresh, issue_access, ne
 from doomich.storage.files import get_storage
 
 LOGIN_RE = re.compile(r"^[0-9A-Za-zА-Яа-яЁё][0-9A-Za-zА-Яа-яЁё_.\-]{2,23}$")
-# Две части с заглавных кириллических букв подряд: ИванПетров, Иван_Петров, Petrov.Ivan
-NAME_LIKE = re.compile(r"^[А-ЯЁ][а-яё]{1,}[_.\- ]?[А-ЯЁ][а-яё]{2,}", re.U)
-NAME_LIKE_LAT = re.compile(r"^[A-Z][a-z]{1,}[_.\- ]?[A-Z][a-z]{2,}$")
+WORDS_RE = re.compile(r"[А-ЯЁA-Z]?[а-яёa-z]+")
+SURNAME_SUFFIXES = ("ов", "ев", "ин", "ын", "ский", "цкий", "ова", "ева", "ина", "ына", "ская", "цкая", "енко",
+                    "ук", "юк", "швили", "дзе", "ян", "ич")
 COMMON_FIRST_NAMES = {
     "александр", "алексей", "андрей", "анна", "анастасия", "дмитрий", "екатерина", "елена", "иван",
-    "мария", "михаил", "наталья", "ольга", "сергей", "татьяна", "юлия", "артём", "артем", "дарья",
-    "максим", "никита", "полина", "софия", "кирилл", "виктория", "егор", "алина", "илья", "ксения",
+    "мария", "михаил", "наталья", "ольга", "сергей", "татьяна", "юлия", "артем", "дарья", "максим",
+    "никита", "полина", "софия", "кирилл", "виктория", "егор", "алина", "илья", "ксения", "владимир",
+    "павел", "роман", "денис", "евгений", "николай", "ирина", "светлана", "марина", "валерия", "арина",
 }
 
 
@@ -58,16 +59,26 @@ def login_problems(login: str) -> list[str]:
 
 
 def login_warnings(login: str) -> list[str]:
+    """Подсказки при выборе псевдонима. Только предупреждения: выбор остаётся за пользователем.
+
+    Те же правила продублированы в клиенте (doomich_core/util/pseudonym.dart).
+    """
     login = unicodedata.normalize("NFKC", login).strip()
     low = normalize_login(login)
-    if NAME_LIKE.match(login) or NAME_LIKE_LAT.match(login):
-        return ["looks_like_name"]
-    if any(low.startswith(n) and len(low) > len(n) + 2 for n in COMMON_FIRST_NAMES):
-        return ["looks_like_name"]
-    if re.search(r"\d{10,}", low):
-        return ["looks_like_phone"]
     if "@" in login:
         return ["looks_like_email"]
+    if re.search(r"\d{10,}", low):
+        return ["looks_like_phone"]
+    words = [w.lower().replace("ё", "е") for w in WORDS_RE.findall(login)]
+    if any(w in COMMON_FIRST_NAMES for w in words):
+        return ["looks_like_name"]
+    if len(words) == 1 and any(low.startswith(n) and len(low) > len(n) + 2 for n in COMMON_FIRST_NAMES):
+        return ["looks_like_name"]
+    capitalized = [w for w in WORDS_RE.findall(login) if w[:1].isupper()]
+    has_digits = any(ch.isdigit() for ch in login)
+    if not has_digits and len(capitalized) >= 2 and any(
+            len(w) >= 4 and w.lower().endswith(SURNAME_SUFFIXES) for w in capitalized):
+        return ["looks_like_name"]
     return []
 
 

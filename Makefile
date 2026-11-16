@@ -47,7 +47,7 @@ test-admin:
 	cd apps/admin && npm run typecheck && npm test -- --run
 
 test-dart:
-	cd packages/doomich_api && dart test
+	cd packages/doomich_api && flutter test
 	cd packages/doomich_core && flutter test
 	cd packages/doomich_ui && flutter test
 

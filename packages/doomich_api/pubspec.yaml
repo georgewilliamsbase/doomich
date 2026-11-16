@@ -1,0 +1,19 @@
+name: doomich_api
+description: Клиент Core API Думыча, модели из OpenAPI, SSE и голосовой протокол.
+version: 1.0.0
+publish_to: none
+resolution: workspace
+
+environment:
+  sdk: ^3.13.0
+
+dependencies:
+  dio: ^5.11.1
+  web_socket_channel: ^3.0.3
+  meta: ^1.15.0
+
+# Тесты гоняются через flutter test: в общем workspace пакет test конфликтует с flutter_test
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  lints: ^6.0.0

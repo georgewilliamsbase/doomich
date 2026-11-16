@@ -59,6 +59,8 @@ class StartMsg(BaseModel):
     speed: float = Field(default=1.0, ge=0.5, le=2.0)
     context: ClientContextIn = Field(default_factory=ClientContextIn)
     text: str | None = Field(default=None, max_length=4000)
+    # Что умеет играть клиент: старые Android не воспроизводят Ogg/Opus
+    formats: list[str] = Field(default_factory=lambda: ["wav"], max_length=4)
 
 
 class Turn:
@@ -160,9 +162,11 @@ async def process_turn(ws: WebSocket, user: CurrentUser, turn: Turn, end_ts: flo
         seq = 0
         pending: list[asyncio.Task[Any]] = []
 
+        fmt = st.tts_format if st.tts_format in start.formats else "wav"
+
         async def synth(sentence: str) -> Any:
             return await ai.tts.synthesize(sentence, lang=lang, voice=voice, speed=start.speed,
-                                           fmt=st.tts_format, tenant=user.tenant.slug)
+                                           fmt=fmt, tenant=user.tenant.slug)
 
         # Синтез следующего предложения начинается, пока играет предыдущее (до двух вперёд)
         while True:

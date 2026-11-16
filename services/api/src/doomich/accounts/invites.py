@@ -95,6 +95,8 @@ async def create_batch(
         max_uses=max_uses, expires_on=expires_on, is_beta=is_beta, code_count=count, created_by=created_by,
     )
     session.add(batch)
+    # Без relationship() порядок вставок не гарантирован: сначала пачка, потом коды
+    await session.flush()
     codes: list[str] = []
     seen: set[str] = set()
     while len(codes) < count:
